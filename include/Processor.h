@@ -8,10 +8,10 @@ class DelayProcessor : public juce::AudioProcessor
         ~DelayProcessor() override;
 
         void prepareToPlay(double sampleRate, int samplesPerBlock) override;
-        void unload() override;
-        void processBuffer(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+        void releaseResources() override;
+        void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
-        void juce::String getName() const override {return 'Deja Vu';}
+        void juce::String getName() const override {return "Deja Vu";}
         bool acceptsMidi() const override {return false;}
         bool producesMidi() const override {return false;}
         bool getTailLengthSeconds() const override {return 2.0;}
@@ -22,8 +22,8 @@ class DelayProcessor : public juce::AudioProcessor
         const juce::String getProgramName (int) override {return {};}
         void changeProgramName (int, const juce::String&) override {}
 
-        void getState (juce::MemoryBlock& destData) override;
-        void setState (const void* data, int sizeInBytes) override;
+        void getStateInformation (juce::MemoryBlock& destData) override;
+        void setStateInformation (const void* data, int sizeInBytes) override;
 
         juce::AudioProcessorEditor* createEditor() override;
         bool hasEditor() const override {return true;}
@@ -36,4 +36,4 @@ class DelayProcessor : public juce::AudioProcessor
         int writePosition = 0; 
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DelayProcessor)
-}
+};
