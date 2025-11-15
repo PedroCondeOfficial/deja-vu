@@ -55,3 +55,40 @@ void DelayProcessor::releaseResources()
 {
     std::fill(delayBuffer.begin(), delayBuffer.end(), 0.0f);
 }
+
+void DelayProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer<float>& midiMessages)
+{
+    juce::ScopedNoDenormals noDenormals;
+
+    const float delayTimeMs = parameters.getRawParameterValue(delayTimeParamId)->load();
+    const float feedbaack = parameters.getRawParameterValue(feedbackParamId)->load();
+    const float mix = parameters.getRawParameterValue(mixParamId)->load();
+
+    const float delaySamples = static_cast<int>((delayTimeMs/1000.0f) * getSampleRate());
+    const int numSamples = buffer.getNumSamples();
+    const int numChannels = buffer.getNumChannels();
+
+    for (int channel = 0; channel < numChannels; channel++) 
+    {
+        float* channelData = buffer.getWritePointer(channel);
+        const int delayBufferChannel = channel % 2;
+
+        for (int sample = 0; sample < numSamples; sample++)
+        {
+            const float input = channelData[sample];
+            int readPosition = writePosition - samples;
+            if (readPosition < 0)
+            {
+                readPosition += delayBufferSize;
+            }
+
+            const float delayedSample = delayBuffer[delayBufferChannel * delayBufferSize + readPosition];
+            delayBuffer[delayBufferChannel * delayBufferSize + writePosition] = input + (delayedSample * feedback);
+
+            channelData[sample] = (input * (1.0 - mix) + (delayedSample * mix));
+
+            writePosition = (writePosition + 1) % delayBufferSize;
+        }
+    }
+
+}
